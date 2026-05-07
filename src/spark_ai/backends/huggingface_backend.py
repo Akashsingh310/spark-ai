@@ -33,6 +33,11 @@ class HuggingFaceBackend:
 
     def predict(self, texts: list[str]) -> list[str]:
         self._load_pipeline()
-        # Batch inference
-        results = HuggingFaceBackend._pipeline(texts, truncation=True, max_length=self._config.max_length)
+        # Batch inference (use configured batch size to improve throughput).
+        results = HuggingFaceBackend._pipeline(
+            texts,
+            truncation=True,
+            max_length=self._config.max_length,
+            batch_size=self._config.batch_size,
+        )
         return [r["label"] for r in results]
