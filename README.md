@@ -85,7 +85,14 @@ For best performance in production:
 - Enable Arrow:
   - `spark.sql.execution.arrow.pyspark.enabled=true`
 - Tune Spark partitions to match your cluster resources
+- Tune `batch_size` for your hardware, or enable `auto_tune_batch_size=True`
 - Run benchmarks on representative text lengths and data sizes
+
+Model-loading behavior:
+
+- Spark may run multiple Python workers per executor
+- Each Python worker keeps its own singleton model instance
+- That means model reuse is per worker process, not globally shared across all workers
 
 You can use the included benchmark script:
 
