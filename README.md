@@ -2,6 +2,10 @@
 
 Distributed AI inference for PySpark DataFrames.
 
+[![Tests](https://github.com/Akashsingh310/spark-ai/actions/workflows/tests.yml/badge.svg)](https://github.com/Akashsingh310/spark-ai/actions/workflows/tests.yml)
+[![Python 3.10+](https://img.shields.io/badge/python-3.10%20%7C%203.11-blue)](https://www.python.org/downloads/)
+[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://www.apache.org/licenses/LICENSE-2.0)
+
 `spark-ai` brings model-powered text processing directly into Spark transformations using a simple API.  
 
 It is designed for portability and works anywhere Spark runs: local development, EMR, Dataproc, Kubernetes, or on-prem clusters.
