@@ -18,6 +18,7 @@ Requires-Dist: pytest-cov; extra == "dev"
 Requires-Dist: black; extra == "dev"
 Requires-Dist: ruff; extra == "dev"
 Requires-Dist: mypy; extra == "dev"
+Requires-Dist: pandas-stubs; extra == "dev"
 Dynamic: license-file
 
 # spark-ai

@@ -12,7 +12,7 @@ logger = configure_logger(__name__)
 def build_sentiment_udf(config: AIConfig):
     """Create a vectorized sentiment UDF bound to a specific config."""
     # This backend instance is created once per Python worker process.
-    backend_instance = None
+    backend_instance: HuggingFaceBackend | None = None
 
     def _get_backend() -> HuggingFaceBackend:
         nonlocal backend_instance
@@ -20,7 +20,7 @@ def build_sentiment_udf(config: AIConfig):
             backend_instance = HuggingFaceBackend(config)
         return backend_instance
 
-    @pandas_udf(StringType())
+    @pandas_udf(returnType=StringType())
     def _sentiment_udf(texts: pd.Series) -> pd.Series:
         """Vectorized sentiment UDF that batches inference."""
         try:

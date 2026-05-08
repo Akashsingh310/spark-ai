@@ -1,3 +1,5 @@
+from typing import Any, ClassVar
+
 from transformers import pipeline
 from spark_ai.exceptions import ModelLoadError
 from spark_ai.logging_config import configure_logger
@@ -11,8 +13,7 @@ class HuggingFaceBackend:
     IMPORTANT: The pipeline is loaded lazily and kept as a class-level
     singleton so that it is only loaded once per executor worker.
     """
-    _pipeline = None
-    _config = None
+    _pipeline: ClassVar[Any | None] = None
     _AUTO_TUNE_WARMUP_BATCHES = 3
 
     def __init__(self, config: AIConfig):
@@ -21,7 +22,7 @@ class HuggingFaceBackend:
         self._auto_tune_candidates: list[int] = []
         self._batch_size_locked = False
 
-    def _load_pipeline(self):
+    def _load_pipeline(self) -> None:
         if HuggingFaceBackend._pipeline is None:
             logger.info(f"Loading Hugging Face model: {self._config.model_name}")
             try:
@@ -97,8 +98,11 @@ class HuggingFaceBackend:
     def predict(self, texts: list[str]) -> list[str]:
         self._load_pipeline()
         batch_size = self._resolve_batch_size(texts)
+        pipeline_obj = HuggingFaceBackend._pipeline
+        if pipeline_obj is None:
+            raise ModelLoadError(f"Could not load model '{self._config.model_name}'")
         # Batch inference with tuned/configured batch size.
-        results = HuggingFaceBackend._pipeline(
+        results = pipeline_obj(
             texts,
             truncation=True,
             max_length=self._config.max_length,
