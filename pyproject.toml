@@ -18,7 +18,7 @@ dependencies = [
     "pydantic>=2.7.0",
 ]
 [project.optional-dependencies]
-dev = ["pytest", "pytest-cov", "black", "ruff", "mypy"]
+dev = ["pytest", "pytest-cov", "black", "ruff", "mypy", "pandas-stubs"]
 
 [tool.setuptools.packages.find]
 where = ["src"]

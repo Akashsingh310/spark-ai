@@ -1,4 +1,3 @@
-import pytest
 from pyspark.sql.types import StringType, StructType, StructField
 from spark_ai import AI
 
