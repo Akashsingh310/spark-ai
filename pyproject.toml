@@ -3,8 +3,8 @@ requires = ["setuptools>=68", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "spark-ai"
-version = "0.1.0"
+name = "spark-infer-ai"
+version = "0.1.1"
 description = "Distributed AI inference framework for PySpark"
 readme = "README.md"
 requires-python = ">=3.10"
