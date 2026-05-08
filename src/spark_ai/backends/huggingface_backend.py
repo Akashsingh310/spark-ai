@@ -13,10 +13,13 @@ class HuggingFaceBackend:
     """
     _pipeline = None
     _config = None
+    _AUTO_TUNE_WARMUP_BATCHES = 3
 
     def __init__(self, config: AIConfig):
         self._config = config
         self._resolved_batch_size: int | None = None
+        self._auto_tune_candidates: list[int] = []
+        self._batch_size_locked = False
 
     def _load_pipeline(self):
         if HuggingFaceBackend._pipeline is None:
@@ -33,12 +36,10 @@ class HuggingFaceBackend:
                 raise ModelLoadError(f"Could not load model '{self._config.model_name}'") from e
 
     def _resolve_batch_size(self, texts: list[str]) -> int:
-        if self._resolved_batch_size is not None:
-            return self._resolved_batch_size
-
         configured = self._config.batch_size
         if not self._config.auto_tune_batch_size and configured > 0:
-            self._resolved_batch_size = configured
+            return configured
+        if self._batch_size_locked and self._resolved_batch_size is not None:
             return self._resolved_batch_size
 
         sample = texts[: min(len(texts), 256)]
@@ -55,12 +56,41 @@ class HuggingFaceBackend:
         if configured > 0:
             candidate = min(candidate, configured)
 
-        self._resolved_batch_size = candidate
+        if not self._config.auto_tune_batch_size:
+            self._resolved_batch_size = candidate
+            logger.info(
+                "Using inference batch size=%s (auto_tune=%s, avg_text_len=%.1f)",
+                self._resolved_batch_size,
+                self._config.auto_tune_batch_size,
+                avg_len,
+            )
+            return self._resolved_batch_size
+
+        if self._auto_tune_candidates and self._auto_tune_candidates[-1] != candidate:
+            logger.warning(
+                "Auto-tune candidate changed from %s to %s before lock-in (avg_text_len=%.1f)",
+                self._auto_tune_candidates[-1],
+                candidate,
+                avg_len,
+            )
+        self._auto_tune_candidates.append(candidate)
+
+        if len(self._auto_tune_candidates) >= self._AUTO_TUNE_WARMUP_BATCHES:
+            # Use the median of warm-up candidates to avoid locking onto an outlier first batch.
+            sorted_candidates = sorted(self._auto_tune_candidates)
+            self._resolved_batch_size = sorted_candidates[len(sorted_candidates) // 2]
+            self._batch_size_locked = True
+        else:
+            # During warm-up, use the current candidate and continue adapting.
+            self._resolved_batch_size = candidate
+
         logger.info(
-            "Using inference batch size=%s (auto_tune=%s, avg_text_len=%.1f)",
+            "Using inference batch size=%s (auto_tune=%s, avg_text_len=%.1f, warmup_batches=%s/%s)",
             self._resolved_batch_size,
             self._config.auto_tune_batch_size,
             avg_len,
+            len(self._auto_tune_candidates),
+            self._AUTO_TUNE_WARMUP_BATCHES,
         )
         return self._resolved_batch_size
 
