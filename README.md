@@ -1,8 +1,9 @@
-# spark-ai
+# spark-infer-ai
 
 Distributed AI inference for PySpark DataFrames.
 
 [![Tests](https://github.com/Akashsingh310/spark-ai/actions/workflows/tests.yml/badge.svg)](https://github.com/Akashsingh310/spark-ai/actions/workflows/tests.yml)
+[![PyPI version](https://img.shields.io/pypi/v/spark-infer-ai.svg)](https://pypi.org/project/spark-infer-ai/)
 [![Python 3.10+](https://img.shields.io/badge/python-3.10%20%7C%203.11-blue)](https://www.python.org/downloads/)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://www.apache.org/licenses/LICENSE-2.0)
 
@@ -21,7 +22,7 @@ It is designed for portability and works anywhere Spark runs: local development,
 ## Installation
 
 ```bash
-pip install spark-ai
+pip install spark-infer-ai
 ```
 
 ## Requirements
