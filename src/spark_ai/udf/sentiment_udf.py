@@ -1,6 +1,7 @@
 import pandas as pd
 from pyspark.sql.functions import pandas_udf
 from pyspark.sql.types import StringType
+from pyspark.sql.pandas.functions import PandasUDFType
 
 from spark_ai.backends.huggingface_backend import HuggingFaceBackend
 from spark_ai.config import AIConfig
@@ -20,7 +21,7 @@ def build_sentiment_udf(config: AIConfig):
             backend_instance = HuggingFaceBackend(config)
         return backend_instance
 
-    @pandas_udf(returnType=StringType())
+    @pandas_udf(StringType(), functionType=PandasUDFType.SCALAR)
     def _sentiment_udf(texts: pd.Series) -> pd.Series:
         """Vectorized sentiment UDF that batches inference."""
         try:

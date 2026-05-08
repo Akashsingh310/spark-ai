@@ -27,7 +27,7 @@ class HuggingFaceBackend:
             logger.info(f"Loading Hugging Face model: {self._config.model_name}")
             try:
                 HuggingFaceBackend._pipeline = pipeline(
-                    "sentiment-analysis",
+                    "text-classification",
                     model=self._config.model_name,
                     device=self._config.device,
                 )
