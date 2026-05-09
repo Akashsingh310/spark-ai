@@ -13,7 +13,7 @@ It is designed for portability and works anywhere Spark runs: local development,
 
 ## Features
 
-- Spark-native sentiment analysis API
+- Spark-native sentiment and zero-shot text classification APIs
 - Vectorized execution with `pandas_udf` for better throughput than row-wise Python UDFs
 - Hugging Face Transformers backend
 - Null-safe text handling for production pipelines
@@ -67,6 +67,16 @@ result.show(truncate=False)
 
 Expected sentiment labels are typically `POSITIVE` / `NEGATIVE` (model-dependent).
 
+Classify custom labels with zero-shot inference:
+
+```python
+topic_result = df.withColumn(
+    "topic",
+    ai.classify("review", labels=["urgent", "complaint", "praise"]),
+)
+topic_result.show(truncate=False)
+```
+
 ## API
 
 ### `AI`
@@ -79,6 +89,17 @@ Applies sentiment analysis to a text column and returns a Spark `Column`.
 
 ```python
 result = df.withColumn("sentiment", ai.sentiment("review"))
+```
+
+#### `AI.classify(text_col: str, labels: list[str])`
+
+Categorizes free-text into your custom labels with a zero-shot classification
+
+```python
+result = df.withColumn(
+    "topic",
+    ai.classify("message", labels=["urgent", "spam", "normal"]),
+)
 ```
 
 ## Performance Notes
@@ -144,7 +165,7 @@ pytest -q
 src/spark_ai/
   ai.py                  # Public API
   config.py              # Central configuration
-  udf/sentiment_udf.py   # Vectorized Spark UDF
+  udf/                   # Vectorized Spark UDF
   backends/              # Inference backend implementations
 tests/unit/              # Unit tests
 examples/                # Usage and benchmark scripts

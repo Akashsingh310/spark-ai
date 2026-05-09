@@ -14,6 +14,8 @@ class HuggingFaceBackend:
     singleton so that it is only loaded once per executor worker.
     """
     _pipeline: ClassVar[Any | None] = None
+    _classifier: ClassVar[Any | None] = None
+    _zero_shot_model_loaded: ClassVar[str | None] = None
     _AUTO_TUNE_WARMUP_BATCHES = 3
 
     def __init__(self, config: AIConfig):
@@ -109,3 +111,30 @@ class HuggingFaceBackend:
             batch_size=batch_size,
         )
         return [r["label"] for r in results]
+
+    def classify(self, texts: list[str], labels: list[str]) -> list[dict[str, float | str]]:
+        z_model = self._config.zero_shot_model_name
+        if (
+            HuggingFaceBackend._classifier is None
+            or HuggingFaceBackend._zero_shot_model_loaded != z_model
+        ):
+            try:
+                logger.info(f"Loading zero-shot classifier model: {z_model}")
+                HuggingFaceBackend._classifier = pipeline(
+                    "zero-shot-classification",
+                    model=z_model,
+                    device=self._config.device,
+                )
+                HuggingFaceBackend._zero_shot_model_loaded = z_model
+            except Exception as e:
+                logger.error(f"Failed to load zero-shot classifier: {e}")
+                raise ModelLoadError(
+                    f"Could not load zero-shot classification model '{z_model}'"
+                ) from e
+
+        classifier = HuggingFaceBackend._classifier
+        if classifier is None:
+            raise ModelLoadError("Could not load zero-shot classification model")
+
+        results = classifier(texts, labels, multi_label=False)
+        return [{"label": r["labels"][0], "score": float(r["scores"][0])} for r in results]
