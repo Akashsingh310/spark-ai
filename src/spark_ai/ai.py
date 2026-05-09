@@ -1,3 +1,4 @@
+from typing import Any, Callable
 from pyspark.sql.functions import col as spark_col
 from spark_ai.config import AIConfig
 from spark_ai.udf.classify_udf import build_classify_udf
@@ -9,7 +10,9 @@ class AI:
     def __init__(self, config: AIConfig | None = None):
         self._config = config or AIConfig()
         self._sentiment_udf = build_sentiment_udf(self._config)
-        self._classify_udf_cache: dict[tuple[str, ...], object] = {}
+        self._classify_udf_cache: dict[
+            tuple[str, ...], Callable[[Any], Any]
+        ] = {}
 
     def sentiment(self, column_name: str):
         """Apply sentiment analysis on a column.
