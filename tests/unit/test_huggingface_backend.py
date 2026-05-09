@@ -10,8 +10,12 @@ from spark_ai.exceptions import ModelLoadError
 @pytest.fixture(autouse=True)
 def reset_backend_singleton():
     HuggingFaceBackend._pipeline = None
+    HuggingFaceBackend._classifier = None
+    HuggingFaceBackend._zero_shot_model_loaded = None
     yield
     HuggingFaceBackend._pipeline = None
+    HuggingFaceBackend._classifier = None
+    HuggingFaceBackend._zero_shot_model_loaded = None
 
 
 def test_predict_extracts_labels_and_uses_configured_batch_size():
@@ -70,3 +74,20 @@ def test_model_load_error_is_wrapped():
     with patch("spark_ai.backends.huggingface_backend.pipeline", side_effect=RuntimeError("boom")):
         with pytest.raises(ModelLoadError):
             backend.predict(["text"])
+
+
+def test_zero_shot_classify_returns_top_label_and_score():
+    def fake_pipeline_factory(*args, **kwargs):
+        def fake_pipeline(texts, labels, multi_label=False):
+            return [
+                {"labels": ["urgent", "normal"], "scores": [0.93, 0.07]}
+                for _ in texts
+            ]
+
+        return fake_pipeline
+
+    backend = HuggingFaceBackend(AIConfig())
+    with patch("spark_ai.backends.huggingface_backend.pipeline", side_effect=fake_pipeline_factory):
+        predictions = backend.classify(["Need this now"], ["urgent", "normal"])
+
+    assert predictions == [{"label": "urgent", "score": 0.93}]
