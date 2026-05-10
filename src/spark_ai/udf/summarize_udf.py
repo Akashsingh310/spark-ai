@@ -2,7 +2,6 @@ import pandas as pd
 from spark_ai.config import AIConfig
 from pyspark.sql.functions import pandas_udf
 from pyspark.sql.types import StringType
-from spark_ai.backends.huggingface_backend import HuggingFaceBackend
 from spark_ai.logging_config import configure_logger
 
 logger = configure_logger(__name__)
@@ -18,7 +17,7 @@ def build_summarize_udf(config: AIConfig):
             backend_instance = HuggingFaceBackend(config)  
         return backend_instance
 
-    @pandas_udf(StringType())
+    @pandas_udf(StringType())  # type: ignore[call-overload]
     def summarize_udf(texts: pd.Series) -> pd.Series:
         backend = _get_backend()
         cleaned = texts.fillna("").astype(str)
