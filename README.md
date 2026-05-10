@@ -13,7 +13,7 @@ It is designed for portability and works anywhere Spark runs: local development,
 
 ## Features
 
-- Spark-native sentiment and zero-shot text classification APIs
+- Spark-native sentiment, summarization, and zero-shot text classification APIs
 - Vectorized execution with `pandas_udf` for better throughput than row-wise Python UDFs
 - Hugging Face Transformers backend
 - Null-safe text handling for production pipelines
@@ -77,6 +77,13 @@ topic_result = df.withColumn(
 topic_result.show(truncate=False)
 ```
 
+Summarize long-form text:
+
+```python
+summary_result = df.withColumn("summary", ai.summarize("review"))
+summary_result.show(truncate=False)
+```
+
 ## API
 
 ### `AI`
@@ -100,6 +107,14 @@ result = df.withColumn(
     "topic",
     ai.classify("message", labels=["urgent", "spam", "normal"]),
 )
+```
+
+#### `AI.summarize(text_col: str)`
+
+Generates a concise summary for long-form text and returns a Spark `Column`.
+
+```python
+result = df.withColumn("summary", ai.summarize("article_text"))
 ```
 
 ## Performance Notes
