@@ -8,9 +8,9 @@ spark = SparkSession.builder \
 
 df = spark.createDataFrame(
     [
-        ("I am very happy with the results!",),
-        ("This is the worst experience ever.",),
-        ("Need a callback in 10 minutes",),
+        ("I am very happy with the results! The product worked exactly as expected.",),
+        ("This is the worst experience ever. The delivery was late and support never replied.",),
+        ("Need a callback in 10 minutes. The issue impacts production and blocks checkout.",),
     ],
     ["review"]
 )
@@ -19,6 +19,7 @@ ai = AI()
 result = (
     df.withColumn("sentiment", ai.sentiment("review"))
     .withColumn("topic", ai.classify("review", labels=["urgent", "complaint", "praise"]))
+    .withColumn("summary", ai.summarize("review"))
 )
 result.show(truncate=False)
 spark.stop()

@@ -15,7 +15,9 @@ class HuggingFaceBackend:
     """
     _pipeline: ClassVar[Any | None] = None
     _classifier: ClassVar[Any | None] = None
+    _summarizer: ClassVar[Any | None] = None
     _zero_shot_model_loaded: ClassVar[str | None] = None
+    _summarization_model_loaded: ClassVar[str | None] = None
     _AUTO_TUNE_WARMUP_BATCHES = 3
 
     def __init__(self, config: AIConfig):
@@ -138,3 +140,37 @@ class HuggingFaceBackend:
 
         results = classifier(texts, labels, multi_label=False)
         return [{"label": r["labels"][0], "score": float(r["scores"][0])} for r in results]
+
+    def summarize(self, texts: list[str]) -> list[str]:
+        s_model = self._config.summarization_model_name
+        if (
+            HuggingFaceBackend._summarizer is None
+            or HuggingFaceBackend._summarization_model_loaded != s_model
+        ):
+            try:
+                logger.info(f"Loading summarization model: {s_model}")
+                HuggingFaceBackend._summarizer = pipeline(
+                    "summarization",
+                    model=s_model,
+                    device=self._config.device,
+                )
+                HuggingFaceBackend._summarization_model_loaded = s_model
+            except Exception as e:
+                logger.error(f"Failed to load summarization model: {e}")
+                raise ModelLoadError(
+                    f"Could not load summarization model '{s_model}'"
+                ) from e
+
+        summarizer = HuggingFaceBackend._summarizer
+        if summarizer is None:
+            raise ModelLoadError("Could not load summarization model")
+
+        batch_size = self._resolve_batch_size(texts)
+        results = summarizer(
+            texts,
+            truncation=True,
+            max_length=self._config.summarization_max_length,
+            min_length=self._config.summarization_min_length,
+            batch_size=batch_size,
+        )
+        return [r["summary_text"] for r in results]

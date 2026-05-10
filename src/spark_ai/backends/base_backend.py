@@ -9,3 +9,7 @@ class InferenceBackend(Protocol):
     def classify(self, texts: list[str], labels: list[str]) -> list[dict[str, float | str]]:
         """Run zero-shot classification for provided candidate labels."""
         ...
+
+    def summarize(self, texts: list[str]) -> list[str]:
+        """Summarize a list of texts."""
+        ...

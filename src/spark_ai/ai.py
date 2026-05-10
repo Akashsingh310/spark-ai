@@ -3,6 +3,7 @@ from pyspark.sql.functions import col as spark_col
 from spark_ai.config import AIConfig
 from spark_ai.udf.classify_udf import build_classify_udf
 from spark_ai.udf.sentiment_udf import build_sentiment_udf
+from spark_ai.udf.summarize_udf import build_summarize_udf
 
 class AI:
     """Public API for AI-powered DataFrame transformations."""
@@ -10,6 +11,7 @@ class AI:
     def __init__(self, config: AIConfig | None = None):
         self._config = config or AIConfig()
         self._sentiment_udf = build_sentiment_udf(self._config)
+        self._summarize_udf = build_summarize_udf(self._config)
         self._classify_udf_cache: dict[
             tuple[str, ...], Callable[[Any], Any]
         ] = {}
@@ -35,3 +37,7 @@ class AI:
             classify_udf = build_classify_udf(self._config, labels)
             self._classify_udf_cache[cache_key] = classify_udf
         return classify_udf(spark_col(text_col))
+
+    def summarize(self, text_col: str):
+        """Summarize long-form text into a concise version."""
+        return self._summarize_udf(spark_col(text_col))
