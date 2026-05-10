@@ -11,11 +11,15 @@ from spark_ai.exceptions import ModelLoadError
 def reset_backend_singleton():
     HuggingFaceBackend._pipeline = None
     HuggingFaceBackend._classifier = None
+    HuggingFaceBackend._summarizer = None
     HuggingFaceBackend._zero_shot_model_loaded = None
+    HuggingFaceBackend._summarization_model_loaded = None
     yield
     HuggingFaceBackend._pipeline = None
     HuggingFaceBackend._classifier = None
+    HuggingFaceBackend._summarizer = None
     HuggingFaceBackend._zero_shot_model_loaded = None
+    HuggingFaceBackend._summarization_model_loaded = None
 
 
 def test_predict_extracts_labels_and_uses_configured_batch_size():
@@ -91,3 +95,32 @@ def test_zero_shot_classify_returns_top_label_and_score():
         predictions = backend.classify(["Need this now"], ["urgent", "normal"])
 
     assert predictions == [{"label": "urgent", "score": 0.93}]
+
+
+def test_summarize_returns_summary_text_and_honors_config_lengths():
+    calls = []
+
+    def fake_pipeline_factory(task, *args, **kwargs):
+        if task != "summarization":
+            raise AssertionError("expected summarization pipeline")
+
+        def fake_pipeline(texts, **inference_kwargs):
+            calls.append(inference_kwargs)
+            return [{"summary_text": "short summary"} for _ in texts]
+
+        return fake_pipeline
+
+    config = AIConfig(
+        summarization_max_length=77,
+        summarization_min_length=20,
+        batch_size=10,
+        auto_tune_batch_size=False,
+    )
+    backend = HuggingFaceBackend(config)
+    with patch("spark_ai.backends.huggingface_backend.pipeline", side_effect=fake_pipeline_factory):
+        summaries = backend.summarize(["very long review"])
+
+    assert summaries == ["short summary"]
+    assert calls[0]["max_length"] == 77
+    assert calls[0]["min_length"] == 20
+    assert calls[0]["batch_size"] == 10
