@@ -5,8 +5,7 @@ from pyspark.sql import SparkSession
 def create_spark_or_skip(master: str, app_name: str) -> SparkSession:
     try:
         return (
-            SparkSession.builder
-            .master(master)
+            SparkSession.builder.master(master)
             .appName(app_name)
             .config("spark.sql.execution.arrow.pyspark.enabled", "true")
             .config("spark.executor.memory", "2g")

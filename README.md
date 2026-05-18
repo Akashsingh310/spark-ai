@@ -13,7 +13,7 @@ It is designed for portability and works anywhere Spark runs: local development,
 
 ## Features
 
-- Spark-native sentiment, summarization, and zero-shot text classification APIs
+- Spark-native sentiment, summarization, zero-shot classification, and text embedding APIs
 - Vectorized execution with `pandas_udf` for better throughput than row-wise Python UDFs
 - Hugging Face Transformers backend
 - Null-safe text handling for production pipelines
@@ -84,6 +84,26 @@ summary_result = df.withColumn("summary", ai.summarize("review"))
 summary_result.show(truncate=False)
 ```
 
+Embed text into dense vectors for search, clustering, or similarity:
+
+```python
+from pyspark.sql.functions import col, size, slice
+
+embedded = df.withColumn("embedding", ai.embed("review"))
+embedded.select(
+    "review",
+    size("embedding").alias("embedding_dims"),
+    slice(col("embedding"), 1, 5).alias("embedding_preview"),
+).show(truncate=False)
+```
+
+
+Run all APIs locally:
+
+```bash
+PYTHONPATH=src python3 examples/local_example.py
+```
+
 ## API
 
 ### `AI`
@@ -116,6 +136,27 @@ Generates a concise summary for long-form text and returns a Spark `Column`.
 ```python
 result = df.withColumn("summary", ai.summarize("article_text"))
 ```
+
+#### `AI.embed(text_col: str)`
+
+Embeds text into a dense vector and returns a Spark `Column` of type `array<double>`.
+
+```python
+result = df.withColumn("embedding", ai.embed("article_text"))
+```
+
+Useful for semantic search, deduplication, clustering, and RAG pipelines inside Spark.
+
+## Configuration
+
+
+
+| Option | Default | Used by |
+|--------|---------|---------|
+| `model_name` | `distilbert-base-uncased-finetuned-sst-2-english` | `sentiment` |
+| `zero_shot_model_name` | `valhalla/distilbart-mnli-12-3` | `classify` |
+| `summarization_model_name` | `sshleifer/distilbart-cnn-12-6` | `summarize` |
+| `embedding_model_name` | `sentence-transformers/all-MiniLM-L6-v2` | `embed` |
 
 ## Performance Notes
 
@@ -167,10 +208,13 @@ Clone and install in editable mode:
 pip install -e ".[dev]"
 ```
 
-Run tests:
+Run tests and linters:
 
 ```bash
 pytest -q
+ruff check src tests
+ruff format --check src tests
+mypy src tests
 ```
 
 

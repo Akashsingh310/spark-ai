@@ -4,7 +4,9 @@ from tests.conftest import create_spark_or_skip
 
 
 def test_sentiment_udf_serializes_on_local_cluster():
-    spark = create_spark_or_skip("local-cluster[2,1,1024]", "spark-ai-serialization-test")
+    spark = create_spark_or_skip(
+        "local-cluster[2,1,1024]", "spark-ai-serialization-test"
+    )
     try:
         ai = AI(AIConfig(batch_size=8))
         df = spark.createDataFrame(
