@@ -1,5 +1,6 @@
 import logging
 
+
 def configure_logger(name: str = "spark_ai", level: str = "INFO") -> logging.Logger:
     """Create a logger with the given level."""
     logger = logging.getLogger(name)

@@ -1,12 +1,15 @@
 from dataclasses import dataclass
 
+
 @dataclass(slots=True)
 class AIConfig:
     """Central configuration for spark-ai."""
+
     model_name: str = "distilbert-base-uncased-finetuned-sst-2-english"
     # Used by zero-shot classify (`AI.classify`); MNLI-style models work best here.
     zero_shot_model_name: str = "valhalla/distilbart-mnli-12-3"
     summarization_model_name: str = "sshleifer/distilbart-cnn-12-6"
+    embedding_model_name: str = "sentence-transformers/all-MiniLM-L6-v2"
     batch_size: int = 32
     # -1 = CPU, 0 = first GPU
     device: int = -1
